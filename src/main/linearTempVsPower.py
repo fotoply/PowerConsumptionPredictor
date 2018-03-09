@@ -11,7 +11,7 @@ def run():
 
     # Split the data into training/testing sets
     temperature = data[:, np.newaxis, 0]
-    testSize = 200
+    testSize = int(len(data)/20)
     x_train = temperature[:-testSize]
     x_test = temperature[-testSize:]
 
