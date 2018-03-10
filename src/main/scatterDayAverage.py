@@ -15,9 +15,20 @@ def loadDataFromCSV(filePath):
 
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
+    keys, powerAvg = extractQuarterlyAverage(data)
+    plotScatter(keys, powerAvg).show()
+
+
+def plotScatter(xAxis, yAxis):
+    plt.scatter(xAxis, yAxis, color='black')
+    plt.xticks(())
+    plt.yticks(())
+    return plt
+
+
+def extractQuarterlyAverage(data):
     powerSum = {}
     count = {}
-
     for entry in data:
         time = entry[0]
         temp = entry[1]
@@ -29,23 +40,13 @@ def run():
         else:
             powerSum[time] = power
             count[time] = 1
-
     powerAvg = []
     keys = []
-
     for key in powerSum:
-        powerAvg.append(powerSum[key]/count[key])
+        powerAvg.append(powerSum[key] / count[key])
         keys.append(key)
+    return keys, powerAvg
 
-    print(keys)
-    print(powerAvg)
-    plt.scatter(keys, powerAvg, color='black')
-    #plt.plot(keys, powerAvg, color='blue', linewidth=3)
-
-    plt.xticks(())
-    plt.yticks(())
-
-    plt.show()
 
 run()
 
