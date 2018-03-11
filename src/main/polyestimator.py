@@ -26,9 +26,6 @@ def run():
 
     y = f(np.array(trainingAvg))
 
-    trainingKey = np.array(trainingKey)
-    testKey =np.array(sorted(testKey))
-
     plt = plotScatter(testKey, testAvg)
 
     colors = ['teal', 'yellowgreen', 'gold']
@@ -68,12 +65,16 @@ def extractQuarterlyAverage(data):
         else:
             powerSum[time] = power
             count[time] = 1
+
     powerAvg = []
     keys = []
     for key in powerSum:
         powerAvg.append(powerSum[key] / count[key])
         keys.append(key)
 
-    return keys, powerAvg
+    powerAvg = [x for _,x in sorted(zip(keys, powerAvg))]
+    keys = sorted(keys)
+
+    return np.array(keys), np.array(powerAvg)
 
 run()

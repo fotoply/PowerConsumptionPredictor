@@ -1,29 +1,37 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn import linear_model
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import AdaBoostRegressor
+
 
 def stripDate(s):
     time = str(s).split(" ")[1].replace("'", "")
     hour = time.split(":")[0]
-    minute = int(time.split(":")[1])/60
-    return int(hour)+minute
+    minute = int(time.split(":")[1]) / 60
+    return int(hour) + minute
 
 
 def loadDataFromCSV(filePath):
-    return np.loadtxt(fname=filePath, delimiter=",", skiprows=1, usecols=(0, 1, 2), converters={0:stripDate})
+    return np.loadtxt(fname=filePath, delimiter=",", skiprows=1, usecols=(0, 1, 2), converters={0: stripDate})
+
 
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
     keys, powerAvg = extractQuarterlyAverage(data)
-    plotScatter(keys, powerAvg).show()
+    keys = keys[:, np.newaxis]
+    rng = np.random.RandomState(1)
+    regressor = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4), n_estimators=50, random_state=rng)
+    regressor.fit(keys, powerAvg)
+    y = regressor.predict(keys)
 
-
-def plotScatter(xAxis, yAxis):
-    plt.scatter(xAxis, yAxis, color='black')
-    plt.xticks(())
-    plt.yticks(())
-    return plt
+    plt.figure()
+    plt.scatter(keys, powerAvg, c="k", label="training samples")
+    plt.plot(keys, y, c="g", label="n_estimators=300", linewidth=2)
+    plt.xlabel("data")
+    plt.ylabel("target")
+    plt.title("Boosted Decision Tree Regression")
+    plt.legend()
+    plt.show()
 
 
 def extractQuarterlyAverage(data):
@@ -54,4 +62,3 @@ def extractQuarterlyAverage(data):
 
 
 run()
-
