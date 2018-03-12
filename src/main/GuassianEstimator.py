@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.ensemble import AdaBoostRegressor
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C
 
 
 def stripDate(s):
@@ -15,21 +15,36 @@ def loadDataFromCSV(filePath):
     return np.loadtxt(fname=filePath, delimiter=",", skiprows=1, usecols=(0, 1, 2), converters={0: stripDate})
 
 
+def extractTimeAndTemperature(data):
+    power = []
+    keys = []
+    for entry in data:
+        time = entry[0]
+        temp = entry[1]
+        powerVal = entry[2]
+
+        power.append(powerVal)
+        keys.append(time)
+
+    return np.array(keys), np.array(power)
+
+
+
+
+
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
-    keys, powerAvg = extractQuarterlyAverage(data)
+    keys, powerAvg = extractTimeAndTemperature(data[:-30000])
     keys = keys[:, np.newaxis]
-    rng = np.random.RandomState(1)
-    regressor = AdaBoostRegressor(DecisionTreeRegressor(max_depth=4), n_estimators=10, random_state=rng)
-    regressor.fit(keys, powerAvg)
-    y = regressor.predict(keys)
+
+    kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
+    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
+    gp.fit(keys, powerAvg)
+    y_pred, sigma = gp.predict(keys, return_std=True)
 
     plt.figure()
     plt.scatter(keys, powerAvg, c="k", label="training samples")
-    plt.plot(keys, y, c="g", label="n_estimators=10", linewidth=2)
-    plt.xlabel("data")
-    plt.ylabel("target")
-    plt.title("Boosted Decision Tree Regression")
+    plt.plot(keys, y_pred, c="g", label="gaussian", linewidth=2)
     plt.legend()
     plt.show()
 
