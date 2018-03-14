@@ -34,17 +34,28 @@ def extractTimeAndTemperature(data):
 
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
-    keys, powerAvg = extractTimeAndTemperature(data[:-30000])
+    keys, powerAvg = extractTimeAndTemperature(data[:2000])
     keys = keys[:, np.newaxis]
 
     kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
     gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
     gp.fit(keys, powerAvg)
-    y_pred, sigma = gp.predict(keys, return_std=True)
+
+    testData = extractTimeAndTemperature(data[2000:2500])
+    x_test, y_test = testData
+    x_test = x_test[:, np.newaxis]
+
+    x = np.unique(x_test)[:, np.newaxis]
+    y_pred, sigma = gp.predict(x, return_std=True)
+
 
     plt.figure()
-    plt.scatter(keys, powerAvg, c="k", label="training samples")
-    plt.plot(keys, y_pred, c="g", label="gaussian", linewidth=2)
+    #plt.scatter(x_test, y_test, c="k", label="training samples")
+    plt.plot(x, y_pred, c="g", label="gaussian", linewidth=2)
+    plt.fill(np.concatenate([x, x[::-1]]),
+             np.concatenate([y_pred - 1.9600 * sigma,
+                             (y_pred + 1.9600 * sigma)[::-1]]),
+             alpha=.5, fc='b', ec='None', label='95% confidence interval')
     plt.legend()
     plt.show()
 
