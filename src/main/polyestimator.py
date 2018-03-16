@@ -41,8 +41,8 @@ def run():
 
 def plotScatter(xAxis, yAxis):
     plt.scatter(xAxis, yAxis, color='black')
-    plt.xticks(())
-    plt.yticks(())
+    #plt.xticks(())
+    #plt.yticks(())
     return plt
 
 

@@ -35,8 +35,6 @@ def run():
     plt.scatter(x_test, y_test, color='black')
     plt.plot(x_test, y_prediction, color='blue', linewidth=3)
 
-    plt.xticks(())
-    plt.yticks(())
 
     plt.show()
 

@@ -34,14 +34,14 @@ def extractTimeAndTemperature(data):
 
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
-    keys, powerAvg = extractTimeAndTemperature(data[:2000])
+    keys, powerAvg = extractTimeAndTemperature(data[:1000])
     keys = keys[:, np.newaxis]
 
     kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
     gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
     gp.fit(keys, powerAvg)
 
-    testData = extractTimeAndTemperature(data[2000:2500])
+    testData = extractTimeAndTemperature(data[1000:1500])
     x_test, y_test = testData
     x_test = x_test[:, np.newaxis]
 

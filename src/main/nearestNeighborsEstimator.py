@@ -33,7 +33,7 @@ def extractTimeAndTemperature(data):
 
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
-    keys, power = extractTimeAndTemperature(data[:20000])
+    keys, power = extractTimeAndTemperature(data)
     keys = keys[:, np.newaxis]
 
     regressor = KNeighborsRegressor(n_neighbors=5)
@@ -55,7 +55,7 @@ def run():
     y_pred = regressor.predict(x)
 
     plt.figure()
-    #plt.scatter(x_test, y_test, c="k", label="training samples")
+    plt.scatter(x_test, y_test, c="k", label="training samples")
     plt.plot(x, y_pred, c="g", label="KNearest", linewidth=2)
     plt.legend()
     plt.show()
