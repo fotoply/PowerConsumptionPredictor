@@ -29,6 +29,7 @@ def extract(data):
 
     return keys, temperature, power
 
+
 def run():
     data = loadDataFromCSV("../../data/building1retail.csv")
     time, tempe, power = extract(data[:5000])
