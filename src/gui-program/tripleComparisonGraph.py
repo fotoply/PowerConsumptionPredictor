@@ -76,7 +76,7 @@ def fit():
     X = np.column_stack((time, temperature))
     y = power[:, np.newaxis]
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.25, train_size=.50)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.01, train_size=0.99)
     dataClass.reprenX = X[:96]
     dataClass.testX = X[768:864]
     dataClass.testY = y[768:864]
