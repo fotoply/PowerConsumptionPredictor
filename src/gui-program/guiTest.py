@@ -4,7 +4,6 @@ import pandas as pd
 from PyQt5 import QtWidgets as QtGui
 from PyQt5.QtWidgets import QFileDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 
@@ -137,7 +136,8 @@ class Window(QtGui.QDialog):
             self.figure.legend(ts.columns, loc="upper left")
 
         elif self.plotTypeBox.currentIndex() == 2:
-            ts = data[self.decompVariableBox.currentText()].resample("D").mean().interpolate("linear")
+            ts = data[self.decompVariableBox.currentText()]  # Get the column we are decomposing
+            #ts = ts.resample("H").mean().interpolate("linear")  # Resample to a hourly to minimize sampling size
             decomp = None
 
             if self.decompType.currentText() == "Additive":
