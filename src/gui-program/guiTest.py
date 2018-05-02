@@ -137,20 +137,8 @@ class Window(QtGui.QDialog):
 
         elif self.plotTypeBox.currentIndex() == 2:
             ts = data[self.decompVariableBox.currentText()]  # Get the column we are decomposing
-            #ts = ts.resample("H").mean().interpolate("linear")  # Resample to a hourly to minimize sampling size
-            decomp = None
-
-            if self.decompType.currentText() == "Additive":
-                from statsmodels.tsa.seasonal import seasonal_decompose
-                decomp = seasonal_decompose(ts, model="additive", freq=96)
-
-            elif self.decompType.currentText() == "Multiplicative":
-                from statsmodels.tsa.seasonal import seasonal_decompose
-                decomp = seasonal_decompose(ts, model="multiplicative", freq=96)
-
-            elif self.decompType.currentText() == "Loess (STL)":
-                from stldecompose import decompose
-                decomp = decompose(ts, period=96)
+            # ts = ts.resample("H").mean().interpolate("linear")  # Resample to a hourly to minimize sampling size
+            decomp = self.decomposeSeries(ts)
 
             if decomp is None:
                 print("Unable to perform seasonality decomposition")
@@ -173,10 +161,49 @@ class Window(QtGui.QDialog):
             ax.set_ylabel("Residual")
 
         elif self.plotTypeBox.currentIndex() == 3:
-            pass
+            ts_first = data[data.columns[0]]
+            ts_second = data[data.columns[1]]
+
+            decomp_first = self.decomposeSeries(ts_first)
+            decomp_second = self.decomposeSeries(ts_second)
+
+            if decomp_first is None or decomp_second is None:
+                print("Unable to decompose, cannot construct day")
+                return
+
+            representative_first = decomp_first.seasonal + decomp_first.trend
+            grouped_first = representative_first.groupby(lambda x: x.hour + x.minute/60).mean()
+            print(grouped_first.head())
+
+            representative_second = decomp_second.seasonal + decomp_second.trend
+            grouped_second = representative_second.groupby(lambda x: x.hour + x.minute/60).mean()
+
+            ax = self.figure.add_subplot(211)
+            ax.plot(grouped_first)
+            ax = self.figure.add_subplot(212)
+            ax.plot(grouped_second)
 
         # refresh canvas
         self.canvas.draw()
+
+    def decomposeSeries(self, ts, decompType=None):
+        decomp = None
+        if decompType is None:
+            decompType = self.decompType.currentText()
+
+        if decompType == "Additive":
+            from statsmodels.tsa.seasonal import seasonal_decompose
+            decomp = seasonal_decompose(ts, model="additive", freq=96)
+
+        elif decompType == "Multiplicative":
+            from statsmodels.tsa.seasonal import seasonal_decompose
+            decomp = seasonal_decompose(ts, model="multiplicative", freq=96)
+
+        elif decompType == "Loess (STL)":
+            from stldecompose import decompose
+            decomp = decompose(ts, period=96)
+
+        return decomp
 
 
 if __name__ == '__main__':
