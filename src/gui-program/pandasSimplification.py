@@ -35,8 +35,8 @@ plt.plot(ts_log)
 plt.subplot(212)
 plt.plot(ts_sd)
 
-#decomp = seasonal_decompose(ts, model='additive', freq=96)
-#decomp.plot()
+decomp = seasonal_decompose(ts, model='additive', freq=96)
+decomp.plot()
 
 #plt.plot(ts)
 plt.show()
