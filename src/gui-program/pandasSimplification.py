@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 from statsmodels.tsa.seasonal import seasonal_decompose
 from matplotlib.pylab import rcParams
 rcParams['figure.figsize'] = 15, 6
@@ -29,11 +29,14 @@ ts = data["Power (kW)"]
 ts_log = ts.rolling("7d").mean()
 ts_sd = ts.rolling("7d").std()
 
+
+plt.subplot(211)
 plt.plot(ts_log)
+plt.subplot(212)
 plt.plot(ts_sd)
 
-decomp = seasonal_decompose(ts, model='additive', freq=96)
-decomp.plot()
+#decomp = seasonal_decompose(ts, model='additive', freq=96)
+#decomp.plot()
 
-plt.plot(ts)
+#plt.plot(ts)
 plt.show()
