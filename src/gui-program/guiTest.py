@@ -84,6 +84,10 @@ class Window(QtGui.QDialog):
         else:
             self.decompVariableBox.hide()
             self.decompType.hide()
+
+        if self.plotTypeBox.currentIndex() == 3:
+            self.decompType.show()
+
         return
 
     def loadData(self):
@@ -142,6 +146,7 @@ class Window(QtGui.QDialog):
 
             if decomp is None:
                 print("Unable to perform seasonality decomposition")
+                self.canvas.draw()
                 return
 
             ax = self.figure.add_subplot(411)
@@ -161,27 +166,43 @@ class Window(QtGui.QDialog):
             ax.set_ylabel("Residual")
 
         elif self.plotTypeBox.currentIndex() == 3:
-            ts_first = data[data.columns[0]]
-            ts_second = data[data.columns[1]]
+            dataCount = len(data.columns)
+            for i in range(0, dataCount):
+                ts = data[data.columns[i]]
+                decomp = self.decomposeSeries(ts)
 
-            decomp_first = self.decomposeSeries(ts_first)
-            decomp_second = self.decomposeSeries(ts_second)
+                if decomp is None:
+                    print("Unable to decompose " + data.columns.values[i])
+                    continue
 
-            if decomp_first is None or decomp_second is None:
-                print("Unable to decompose, cannot construct day")
-                return
+                represe = decomp.seasonal + decomp.trend
+                grouped = represe.groupby(lambda x: x.hour + x.minute/60).mean()
 
-            representative_first = decomp_first.seasonal + decomp_first.trend
-            grouped_first = representative_first.groupby(lambda x: x.hour + x.minute/60).mean()
-            print(grouped_first.head())
+                ax = self.figure.add_subplot(dataCount*100+10+i+1)
+                ax.plot(grouped)
+                ax.set_title(data.columns.values[i])
 
-            representative_second = decomp_second.seasonal + decomp_second.trend
-            grouped_second = representative_second.groupby(lambda x: x.hour + x.minute/60).mean()
-
-            ax = self.figure.add_subplot(211)
-            ax.plot(grouped_first)
-            ax = self.figure.add_subplot(212)
-            ax.plot(grouped_second)
+            # ts_first = data[data.columns[0]]
+            # ts_second = data[data.columns[1]]
+            #
+            # decomp_first = self.decomposeSeries(ts_first)
+            # decomp_second = self.decomposeSeries(ts_second)
+            #
+            # if decomp_first is None or decomp_second is None:
+            #     print("Unable to decompose, cannot construct day")
+            #     self.canvas.draw()
+            #     return
+            #
+            # representative_first = decomp_first.seasonal + decomp_first.trend
+            # grouped_first = representative_first.groupby(lambda x: x.hour + x.minute/60).mean()
+            #
+            # representative_second = decomp_second.seasonal + decomp_second.trend
+            # grouped_second = representative_second.groupby(lambda x: x.hour + x.minute/60).mean()
+            #
+            # ax = self.figure.add_subplot(211)
+            # ax.plot(grouped_first)
+            # ax = self.figure.add_subplot(212)
+            # ax.plot(grouped_second)
 
         # refresh canvas
         self.canvas.draw()
