@@ -1,6 +1,7 @@
 import random
 import sys
 import pandas as pd
+import numpy as np
 from PyQt5 import QtWidgets as QtGui
 from PyQt5.QtWidgets import QFileDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -166,21 +167,46 @@ class Window(QtGui.QDialog):
             ax.set_ylabel("Residual")
 
         elif self.plotTypeBox.currentIndex() == 3:
+            represe = {}
+            grouped = {}
+            decomp = {}
             dataCount = len(data.columns)
             for i in range(0, dataCount):
                 ts = data[data.columns[i]]
-                decomp = self.decomposeSeries(ts)
+                decomp[i] = self.decomposeSeries(ts)
 
                 if decomp is None:
                     print("Unable to decompose " + data.columns.values[i])
                     continue
 
-                represe = decomp.seasonal + decomp.trend
-                grouped = represe.groupby(lambda x: x.hour + x.minute/60).mean()
+                represe[i] = decomp[i].seasonal + decomp[i].trend
+                grouped[i] = represe[i].groupby(lambda x: x.hour + x.minute / 60).mean()
 
-                ax = self.figure.add_subplot(dataCount*100+10+i+1)
-                ax.plot(grouped)
+                ax = self.figure.add_subplot(dataCount * 100 + 10 + i + 1)
+                ax.plot(grouped[i])
                 ax.set_title(data.columns.values[i])
+
+            if dataCount == 2:
+                rng = np.random.RandomState(1)
+                from sklearn.ensemble import AdaBoostRegressor
+                from sklearn.tree import DecisionTreeRegressor
+                regressor = AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
+                regressor.fit(np.column_stack((grouped[0].index.values, grouped[0].values)), grouped[1].values)
+                self.figure.clear()
+                ax = self.figure.add_subplot(111)
+                x = []
+                for i in range(24):
+                    x.append(i)
+                    x.append(i + .25)
+                    x.append(i + .5)
+                    x.append(i + .75)
+
+                x = np.array(x)
+                x = x[:, np.newaxis]
+                y = regressor.predict(np.column_stack((grouped[0].index.values, grouped[0].values)))
+                ax.plot(x, y, c="g", label="Representative Day", linewidth=2)
+
+
 
             # ts_first = data[data.columns[0]]
             # ts_second = data[data.columns[1]]
