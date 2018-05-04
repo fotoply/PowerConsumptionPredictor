@@ -11,6 +11,8 @@ from matplotlib.figure import Figure
 class Window(QtGui.QDialog):
     filename = None
     headers = None
+    regressor = None
+    groups = None
 
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
@@ -53,6 +55,9 @@ class Window(QtGui.QDialog):
         self.decompType = QtGui.QComboBox()
         self.decompType.addItems(("Additive", "Mutiplicative", "Loess (STL)"))
         self.decompType.hide()
+        self.loadPredictionButton = QtGui.QPushButton("Load predictive data")
+        self.loadPredictionButton.hide()
+        self.loadPredictionButton.clicked.connect(self.doPrediction)
 
         # set the layout
         layout = QtGui.QGridLayout()
@@ -73,6 +78,7 @@ class Window(QtGui.QDialog):
         layout.addWidget(self.plotTypeBox, 6, 1)
         layout.addWidget(self.decompVariableBox, 7, 1)
         layout.addWidget(self.decompType, 8, 1)
+        layout.addWidget(self.loadPredictionButton, 9, 1)
 
         layout.addWidget(self.plotButton, 10, 1)
         layout.addWidget(self.canvas, 1, 2, 10, 1)
@@ -167,10 +173,10 @@ class Window(QtGui.QDialog):
             ax.set_ylabel("Residual")
 
         elif self.plotTypeBox.currentIndex() == 3:
-            represe = {}
-            grouped = {}
-            decomp = {}
             dataCount = len(data.columns)
+            represe = [None] * dataCount
+            grouped = [None] * dataCount
+            decomp = [None] * dataCount
             for i in range(0, dataCount):
                 ts = data[data.columns[i]]
                 decomp[i] = self.decomposeSeries(ts)
@@ -180,18 +186,21 @@ class Window(QtGui.QDialog):
                     continue
 
                 represe[i] = decomp[i].seasonal + decomp[i].trend
-                grouped[i] = represe[i].groupby(lambda x: x.hour + x.minute / 60).mean()
+                grouped[i] = represe[i].groupby(represe[i].index.time).mean()#lambda x: x.hour + x.minute / 60).mean()
 
                 ax = self.figure.add_subplot(dataCount * 100 + 10 + i + 1)
                 ax.plot(grouped[i])
                 ax.set_title(data.columns.values[i])
 
+            Window.groups = grouped
+
             if dataCount == 2:
                 rng = np.random.RandomState(1)
                 from sklearn.ensemble import AdaBoostRegressor
                 from sklearn.tree import DecisionTreeRegressor
-                regressor = AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
-                regressor.fit(np.column_stack((grouped[0].index.values, grouped[0].values)), grouped[1].values)
+                from sklearn import linear_model
+                regressor = linear_model.LinearRegression()#AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
+                regressor.fit(represe[0].to_frame().dropna().iloc[:], represe[1].dropna().values)
                 self.figure.clear()
                 ax = self.figure.add_subplot(111)
                 x = []
@@ -203,34 +212,36 @@ class Window(QtGui.QDialog):
 
                 x = np.array(x)
                 x = x[:, np.newaxis]
-                y = regressor.predict(np.column_stack((grouped[0].index.values, grouped[0].values)))
+                y = regressor.predict(grouped[0].to_frame().dropna().iloc[:])
                 ax.plot(x, y, c="g", label="Representative Day", linewidth=2)
-
-
-
-            # ts_first = data[data.columns[0]]
-            # ts_second = data[data.columns[1]]
-            #
-            # decomp_first = self.decomposeSeries(ts_first)
-            # decomp_second = self.decomposeSeries(ts_second)
-            #
-            # if decomp_first is None or decomp_second is None:
-            #     print("Unable to decompose, cannot construct day")
-            #     self.canvas.draw()
-            #     return
-            #
-            # representative_first = decomp_first.seasonal + decomp_first.trend
-            # grouped_first = representative_first.groupby(lambda x: x.hour + x.minute/60).mean()
-            #
-            # representative_second = decomp_second.seasonal + decomp_second.trend
-            # grouped_second = representative_second.groupby(lambda x: x.hour + x.minute/60).mean()
-            #
-            # ax = self.figure.add_subplot(211)
-            # ax.plot(grouped_first)
-            # ax = self.figure.add_subplot(212)
-            # ax.plot(grouped_second)
+                Window.regressor = regressor
+                self.loadPredictionButton.show()
 
         # refresh canvas
+        self.canvas.draw()
+
+    def doPrediction(self):
+        if Window.regressor is None:
+            return
+
+        filename, sortOption = QFileDialog.getOpenFileName(self, "Choose data file", "",
+                                                           "All Files (*);;CSV Files (*.csv)")
+        if not filename:
+            return
+
+        data = pd.read_csv(filename, parse_dates=[self.timestampFieldBox.currentText()],
+                           index_col=self.timestampFieldBox.currentText(),
+                           delimiter=self.selectDelimiterBox.currentText())
+        data_actual = pd.read_csv(filename.replace(".csv", "-actual.csv"),
+                                  parse_dates=[self.timestampFieldBox.currentText()],
+                                  index_col=self.timestampFieldBox.currentText(),
+                                  delimiter=self.selectDelimiterBox.currentText())
+
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        y = Window.regressor.predict(data.dropna().iloc[:])
+        ax.plot(data.index.values, y, label="Prediction", linewidth=2)
+        ax.scatter(data_actual.index.values, data_actual.iloc[:], label="Actual")
         self.canvas.draw()
 
     def decomposeSeries(self, ts, decompType=None):
