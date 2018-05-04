@@ -186,7 +186,22 @@ class Window(QtGui.QDialog):
                     continue
 
                 represe[i] = decomp[i].seasonal + decomp[i].trend
-                grouped[i] = represe[i].groupby(represe[i].index.time).mean()#lambda x: x.hour + x.minute / 60).mean()
+                grouped[i] = represe[i].groupby(represe[i].index.hour + represe[i].index.minute/60).mean()
+
+                # seperate time arguments
+                represe[i] = represe[i].to_frame()
+                represe[i] = represe[i].join(pd.Series(ts.index.month, name="Month", index=ts.index))
+                represe[i] = represe[i].join(pd.Series(ts.index.day, name="Date", index=ts.index))
+                represe[i] = represe[i].join(pd.Series(ts.index.hour, name="Hour", index=ts.index))
+                represe[i] = represe[i].join(pd.Series(ts.index.minute, name="Minute", index=ts.index))
+
+                grouped[i] = grouped[i].to_frame()
+                grouped[i] = grouped[i].join(pd.Series(6, index=grouped[i].index, name="Month"))
+                grouped[i] = grouped[i].join(pd.Series(15, index=grouped[i].index, name="Date"))
+                grouped[i] = grouped[i].join(pd.Series(grouped[i].index.map(int), index=grouped[i].index, name="Hour"))
+                grouped[i] = grouped[i].join(
+                    pd.Series(grouped[i].index.map(lambda x: (int(x * 100) - int(x) * 100)/(1+2/3)), index=grouped[i].index,
+                              name="Minute"))
 
                 ax = self.figure.add_subplot(dataCount * 100 + 10 + i + 1)
                 ax.plot(grouped[i])
@@ -199,21 +214,19 @@ class Window(QtGui.QDialog):
                 from sklearn.ensemble import AdaBoostRegressor
                 from sklearn.tree import DecisionTreeRegressor
                 from sklearn import linear_model
-                regressor = linear_model.LinearRegression()#AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
-                regressor.fit(represe[0].to_frame().dropna().iloc[:], represe[1].dropna().values)
+                from sklearn.pipeline import make_pipeline
+                from sklearn.preprocessing import PolynomialFeatures
+                from sklearn.linear_model import Ridge
+                regressor = make_pipeline(PolynomialFeatures(3), DecisionTreeRegressor(max_depth=10))#linear_model.LinearRegression(fit_intercept=False)  # AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
+                regressor.fit(represe[0].dropna().values, represe[1].dropna().iloc[:, 0])
                 self.figure.clear()
                 ax = self.figure.add_subplot(111)
-                x = []
-                for i in range(24):
-                    x.append(i)
-                    x.append(i + .25)
-                    x.append(i + .5)
-                    x.append(i + .75)
-
-                x = np.array(x)
-                x = x[:, np.newaxis]
-                y = regressor.predict(grouped[0].to_frame().dropna().iloc[:])
-                ax.plot(x, y, c="g", label="Representative Day", linewidth=2)
+                y = regressor.predict(grouped[0].dropna().values)
+                print(represe[0].dropna().head(20))
+                print(represe[0].dropna().describe())
+                print(grouped[0].dropna().head(20))
+                print(grouped[0].dropna().describe())
+                ax.plot(grouped[0].index.values, y, c="r", label="Representative Day", linewidth=2)
                 Window.regressor = regressor
                 self.loadPredictionButton.show()
 
@@ -237,9 +250,14 @@ class Window(QtGui.QDialog):
                                   index_col=self.timestampFieldBox.currentText(),
                                   delimiter=self.selectDelimiterBox.currentText())
 
+        data = data.join(pd.Series(data.index.month, name="Month", index=data.index))
+        data = data.join(pd.Series(data.index.day, name="Date", index=data.index))
+        data = data.join(pd.Series(data.index.hour, name="Hour", index=data.index))
+        data = data.join(pd.Series(data.index.minute, name="Minute", index=data.index))
+
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        y = Window.regressor.predict(data.dropna().iloc[:])
+        y = Window.regressor.predict(data.dropna().values)
         ax.plot(data.index.values, y, label="Prediction", linewidth=2)
         ax.scatter(data_actual.index.values, data_actual.iloc[:], label="Actual")
         self.canvas.draw()
