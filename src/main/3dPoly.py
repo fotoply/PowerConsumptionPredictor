@@ -46,7 +46,6 @@ def run():
         x.append(i + .75)
 
     x = np.array(x)
-    #x = x[:, np.newaxis]
 
     model = make_pipeline(PolynomialFeatures(5), Ridge())
     model.fit(train_keys[:, np.newaxis], train_temperature[:])
@@ -58,7 +57,6 @@ def run():
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
-    #ax.plot_surface(x, y_plot[:, np.newaxis], z_plot[:, np.newaxis])
     ax.plot_trisurf(x, y_plot, z_plot)
     ax.scatter(test_keys, test_temperature, zs=0, zdir='z')
     ax.scatter(test_keys, test_power, zs=70, zdir='y')
