@@ -245,7 +245,11 @@ class Window(QtGui.QDialog):
         data = pd.read_csv(filename, parse_dates=[self.timestampFieldBox.currentText()],
                            index_col=self.timestampFieldBox.currentText(),
                            delimiter=self.selectDelimiterBox.currentText())
-        data_actual = pd.read_csv(filename.replace(".csv", "-actual.csv"),
+
+        data_actual = None
+        from pathlib import Path
+        if Path(filename.replace(".csv", "-actual.csv")).is_file():
+            data_actual = pd.read_csv(filename.replace(".csv", "-actual.csv"),
                                   parse_dates=[self.timestampFieldBox.currentText()],
                                   index_col=self.timestampFieldBox.currentText(),
                                   delimiter=self.selectDelimiterBox.currentText())
@@ -259,7 +263,8 @@ class Window(QtGui.QDialog):
         ax = self.figure.add_subplot(111)
         y = Window.regressor.predict(data.dropna().values)
         ax.plot(data.index.values, y, label="Prediction", linewidth=2)
-        ax.scatter(data_actual.index.values, data_actual.iloc[:], label="Actual")
+        if data_actual is not None:
+            ax.scatter(data_actual.index.values, data_actual.iloc[:], label="Actual")
         self.canvas.draw()
 
     def decomposeSeries(self, ts, decompType=None):
