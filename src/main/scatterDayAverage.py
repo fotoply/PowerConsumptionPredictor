@@ -14,7 +14,7 @@ def loadDataFromCSV(filePath):
     return np.loadtxt(fname=filePath, delimiter=",", skiprows=1, usecols=(0, 1, 2), converters={0:stripDate})
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     keys, powerAvg = extractQuarterlyAverage(data)
     plotScatter(keys, powerAvg).show()
 

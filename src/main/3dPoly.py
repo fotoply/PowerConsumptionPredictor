@@ -34,7 +34,7 @@ def extract(data):
 
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     train_keys, train_temperature, train_power = extract(data[:-500])
     test_keys, test_temperature, test_power = extract(data[-500:])
 

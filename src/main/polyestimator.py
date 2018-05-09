@@ -18,7 +18,7 @@ def loadDataFromCSV(filePath):
 
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     trainingData = data[:-2000]
     testData = data[-2000:]
     trainingKey, trainingAvg = extractQuarterlyAverage(trainingData)

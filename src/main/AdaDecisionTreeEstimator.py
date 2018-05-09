@@ -16,7 +16,7 @@ def loadDataFromCSV(filePath):
 
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     keys, powerAvg = extractQuarterlyAverage(data)
     keys = keys[:, np.newaxis]
     rng = np.random.RandomState(1)

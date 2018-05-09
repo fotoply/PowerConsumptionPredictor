@@ -7,7 +7,7 @@ def loadDataFromCSV(filePath):
     return np.loadtxt(fname=filePath, delimiter=",", skiprows=1, usecols=(1, 2))
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
 
     # Split the data into training/testing sets
     temperature = data[:, np.newaxis, 0]

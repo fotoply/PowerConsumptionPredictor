@@ -32,7 +32,7 @@ def extractTimeAndTemperature(data):
 
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     keys, power = extractTimeAndTemperature(data)
     keys = keys[:, np.newaxis]
 

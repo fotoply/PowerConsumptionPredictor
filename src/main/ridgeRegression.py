@@ -31,7 +31,7 @@ def extract(data):
 
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     time, tempe, power = extract(data[:5000])
     train_x = np.array(time)[:, np.newaxis]
     train_y = np.array(power)

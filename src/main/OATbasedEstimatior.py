@@ -77,7 +77,7 @@ def extractTimeAndTemperature(data):
     return np.array(keys), np.array(temperature), np.array(power)
 
 def run():
-    data = loadDataFromCSV("../../data/building1retail.csv")
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
     train_keys, train_temperature, train_power = extractTimeAndTemperature(data[:-500])#extract_from_data(data[:500])
     test_keys, test_temperature, test_power = extractTimeAndTemperature(data[-500:])#extract_from_data(data[500:600])
 
