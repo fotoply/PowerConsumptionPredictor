@@ -1,0 +1,10 @@
+matplotlib==2.2.0
+numpy==1.14.2
+pandas==0.22.0
+PyQt5==5.10.1
+scikit-learn==0.19.1
+
+#C++ Build tools from step 1 are required to install these
+statsmodels==0.8.0
+stldecompose==0.0.3
+
