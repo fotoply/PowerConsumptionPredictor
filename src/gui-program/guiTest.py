@@ -46,7 +46,7 @@ class Window(QtGui.QDialog):
         self.loadButton.clicked.connect(self.loadData)
 
         self.plotTypeBox = QtGui.QComboBox()
-        self.plotTypeBox.addItems(("Rolling mean", "Rolling STD", "Seasonal decomposition", "Representative day"))
+        self.plotTypeBox.addItems(("Rolling mean", "Rolling STD", "Seasonal decomposition", "Representative day", "Input data plot"))
         self.plotTypeBox.currentIndexChanged.connect(self.plotTypeChanged)
         self.plotTypeBox.setEnabled(False)
 
@@ -229,6 +229,11 @@ class Window(QtGui.QDialog):
                 ax.plot(grouped[0].index.values, y, c="r", label="Representative Day", linewidth=2)
                 Window.regressor = regressor
                 self.loadPredictionButton.show()
+        elif self.plotTypeBox.currentIndex() == 4:
+            ax = self.figure.add_subplot(111)
+            ax.clear()
+            ax.plot(data)
+            self.figure.legend(data.columns, loc="upper left")
 
         # refresh canvas
         self.canvas.draw()
