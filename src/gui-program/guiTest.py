@@ -53,7 +53,7 @@ class Window(QtGui.QDialog):
         self.decompVariableBox = QtGui.QComboBox()
         self.decompVariableBox.hide()
         self.decompType = QtGui.QComboBox()
-        self.decompType.addItems(("Additive", "Mutiplicative", "Loess (STL)"))
+        self.decompType.addItems(("Additive", "Multiplicative", "Loess (STL)"))
         self.decompType.hide()
         self.loadPredictionButton = QtGui.QPushButton("Load predictive data")
         self.loadPredictionButton.hide()
@@ -107,6 +107,7 @@ class Window(QtGui.QDialog):
                                   delimiter=self.selectDelimiterBox.currentText())
         self.plotButton.setEnabled(True)
         self.plotTypeBox.setEnabled(True)
+        self.decompVariableBox.clear()
         self.decompVariableBox.addItems(list(Window.data.columns.values))
 
     def selectFile(self):
@@ -283,7 +284,10 @@ class Window(QtGui.QDialog):
 
         elif decompType == "Multiplicative":
             from statsmodels.tsa.seasonal import seasonal_decompose
-            decomp = seasonal_decompose(ts, model="multiplicative", freq=96)
+            try:
+                decomp = seasonal_decompose(ts, model="multiplicative", freq=96)
+            except:
+                decomp = None
 
         elif decompType == "Loess (STL)":
             from stldecompose import decompose
