@@ -17,7 +17,6 @@ class LoadingDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(LoadingDialog, self).__init__(parent)
 
-
         self.textDesc = QtGui.QLabel()
         self.textDesc.setText("Loading data, please wait")
         layout = QtGui.QVBoxLayout()
@@ -164,7 +163,6 @@ class Window(QtGui.QDialog):
 
         self.showPopupAndWait(self.loadData)
 
-
     def loadData(self):
         Window.data = pd.read_csv(Window.filename, parse_dates=[self.timestampFieldBox.currentText()],
                                   index_col=self.timestampFieldBox.currentText(),
@@ -306,6 +304,7 @@ class Window(QtGui.QDialog):
             self.figure.legend(data.columns, loc="upper left")
 
         # refresh canvas
+        self.figure.autofmt_xdate()
         self.canvas.draw()
 
     def doPrediction(self):
@@ -338,6 +337,8 @@ class Window(QtGui.QDialog):
         ax = self.figure.add_subplot(111)
         y = Window.regressor.predict(data.dropna().values)
         ax.plot(data.index.values, y, label="Prediction", linewidth=2)
+        ax.set_ylabel(Window.groups[1].columns[0])
+        self.figure.autofmt_xdate()
         y_actual = data_actual.iloc[:]
         if data_actual is not None:
             ax.scatter(data_actual.index.values, y_actual, label="Actual")
@@ -345,7 +346,8 @@ class Window(QtGui.QDialog):
 
         y_actual = y_actual.values
 
-        from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, average_precision_score, accuracy_score
+        from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, average_precision_score, \
+            accuracy_score
         squaredError = mean_squared_error(y_actual, y)
         meanError = sqrt(squaredError)
         absoluteError = mean_absolute_error(y_actual, y)
@@ -398,6 +400,7 @@ class Window(QtGui.QDialog):
             if y_value - deviation < y_actual_value[0] or y_value + deviation > y_actual_value[0]:
                 inside += 1
         return inside / len(y) * 100
+
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
