@@ -314,6 +314,7 @@ class Window(QtGui.QDialog):
         squaredError = mean_squared_error(y_actual, y)
         meanError = sqrt(squaredError)
         absoluteError = mean_absolute_error(y_actual, y)
+        mape = np.mean(np.abs((y_actual - y) / y_actual)) * 100
         r2Score = r2_score(y_actual, y)
         withinSTD = self.percentInSTD(y, y_actual)
         # precision = average_precision_score(y_actual, y) #These don't work for continous values
@@ -326,8 +327,9 @@ class Window(QtGui.QDialog):
         msg.setDetailedText("Squared mean error: " + str(squaredError) + "\n" +
                             "Mean error: " + str(meanError) + "\n" +
                             "Mean absolute error: " + str(absoluteError) + "\n" +
+                            "Mean absolute percentage error: " + str(mape) + "\n" +
                             "R²: " + str(r2Score) + "\n" +
-                            "Within standard deviation: " + str(withinSTD) + "%")
+                            "Within standard deviation: " + str(withinSTD) + "%" + "\n")
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
