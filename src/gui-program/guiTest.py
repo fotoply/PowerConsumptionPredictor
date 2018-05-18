@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 from PyQt5 import QtWidgets as QtGui
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -46,7 +46,8 @@ class Window(QtGui.QDialog):
         self.loadButton.clicked.connect(self.loadData)
 
         self.plotTypeBox = QtGui.QComboBox()
-        self.plotTypeBox.addItems(("Rolling mean", "Rolling STD", "Seasonal decomposition", "Representative day", "Input data plot"))
+        self.plotTypeBox.addItems(
+            ("Rolling mean", "Rolling STD", "Seasonal decomposition", "Representative day", "Input data plot"))
         self.plotTypeBox.currentIndexChanged.connect(self.plotTypeChanged)
         self.plotTypeBox.setEnabled(False)
 
@@ -187,7 +188,7 @@ class Window(QtGui.QDialog):
                     continue
 
                 represe[i] = decomp[i].seasonal + decomp[i].trend
-                grouped[i] = represe[i].groupby(represe[i].index.hour + represe[i].index.minute/60).mean()
+                grouped[i] = represe[i].groupby(represe[i].index.hour + represe[i].index.minute / 60).mean()
 
                 # seperate time arguments
                 represe[i] = represe[i].to_frame()
@@ -201,7 +202,8 @@ class Window(QtGui.QDialog):
                 grouped[i] = grouped[i].join(pd.Series(15, index=grouped[i].index, name="Date"))
                 grouped[i] = grouped[i].join(pd.Series(grouped[i].index.map(int), index=grouped[i].index, name="Hour"))
                 grouped[i] = grouped[i].join(
-                    pd.Series(grouped[i].index.map(lambda x: (int(x * 100) - int(x) * 100)/(1+2/3)), index=grouped[i].index,
+                    pd.Series(grouped[i].index.map(lambda x: (int(x * 100) - int(x) * 100) / (1 + 2 / 3)),
+                              index=grouped[i].index,
                               name="Minute"))
 
                 ax = self.figure.add_subplot(dataCount * 100 + 10 + i + 1)
@@ -218,7 +220,8 @@ class Window(QtGui.QDialog):
                 from sklearn.pipeline import make_pipeline
                 from sklearn.preprocessing import PolynomialFeatures
                 from sklearn.linear_model import Ridge
-                regressor = make_pipeline(PolynomialFeatures(3), DecisionTreeRegressor(max_depth=10))#linear_model.LinearRegression(fit_intercept=False)  # AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
+                regressor = make_pipeline(PolynomialFeatures(3), DecisionTreeRegressor(
+                    max_depth=10))  # linear_model.LinearRegression(fit_intercept=False)  # AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
                 regressor.fit(represe[0].dropna().values, represe[1].dropna().iloc[:, 0])
                 self.figure.clear()
                 ax = self.figure.add_subplot(111)
@@ -256,9 +259,9 @@ class Window(QtGui.QDialog):
         from pathlib import Path
         if Path(filename.replace(".csv", "-actual.csv")).is_file():
             data_actual = pd.read_csv(filename.replace(".csv", "-actual.csv"),
-                                  parse_dates=[self.timestampFieldBox.currentText()],
-                                  index_col=self.timestampFieldBox.currentText(),
-                                  delimiter=self.selectDelimiterBox.currentText())
+                                      parse_dates=[self.timestampFieldBox.currentText()],
+                                      index_col=self.timestampFieldBox.currentText(),
+                                      delimiter=self.selectDelimiterBox.currentText())
 
         data = data.join(pd.Series(data.index.month, name="Month", index=data.index))
         data = data.join(pd.Series(data.index.day, name="Date", index=data.index))
@@ -269,9 +272,25 @@ class Window(QtGui.QDialog):
         ax = self.figure.add_subplot(111)
         y = Window.regressor.predict(data.dropna().values)
         ax.plot(data.index.values, y, label="Prediction", linewidth=2)
+        y_actual = data_actual.iloc[:]
         if data_actual is not None:
-            ax.scatter(data_actual.index.values, data_actual.iloc[:], label="Actual")
+            ax.scatter(data_actual.index.values, y_actual, label="Actual")
         self.canvas.draw()
+
+        from sklearn.metrics import mean_squared_error, r2_score, average_precision_score, accuracy_score
+        squaredError = mean_squared_error(y_actual, y)
+        r2Score = r2_score(y_actual, y)
+        # precision = average_precision_score(y_actual, y) #These don't work for continous values
+        # accuracy = accuracy_score(y_actual, y)
+
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText("Relevant data for prediction")
+        msg.setWindowTitle("Prediction information")
+        msg.setDetailedText("Squared mean error: " + str(squaredError) + "\n" +
+                            "R²: " + str(r2Score) + "\n")
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
 
     def decomposeSeries(self, ts, decompType=None):
         decomp = None
