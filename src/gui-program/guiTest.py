@@ -2,6 +2,8 @@ import random
 import sys
 from threading import Thread
 
+from math import sqrt
+
 import pandas as pd
 import numpy as np
 from PyQt5 import QtWidgets as QtGui
@@ -254,7 +256,7 @@ class Window(QtGui.QDialog):
                 represe[i] = decomp[i].seasonal + decomp[i].trend
                 grouped[i] = represe[i].groupby(represe[i].index.hour + represe[i].index.minute / 60).mean()
 
-                # seperate time arguments
+                # separate time arguments
                 represe[i] = represe[i].to_frame()
                 represe[i] = represe[i].join(pd.Series(ts.index.month, name="Month", index=ts.index))
                 represe[i] = represe[i].join(pd.Series(ts.index.day, name="Date", index=ts.index))
@@ -341,9 +343,15 @@ class Window(QtGui.QDialog):
             ax.scatter(data_actual.index.values, y_actual, label="Actual")
         self.canvas.draw()
 
-        from sklearn.metrics import mean_squared_error, r2_score, average_precision_score, accuracy_score
+        y_actual = y_actual.values
+
+        from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, average_precision_score, accuracy_score
         squaredError = mean_squared_error(y_actual, y)
+        meanError = sqrt(squaredError)
+        absoluteError = mean_absolute_error(y_actual, y)
+        mape = np.mean(np.abs((y_actual - y) / y_actual)) * 100
         r2Score = r2_score(y_actual, y)
+        withinSTD = self.percentInSTD(y, y_actual)
         # precision = average_precision_score(y_actual, y) #These don't work for continous values
         # accuracy = accuracy_score(y_actual, y)
 
@@ -352,7 +360,11 @@ class Window(QtGui.QDialog):
         msg.setText("Relevant data for prediction")
         msg.setWindowTitle("Prediction information")
         msg.setDetailedText("Squared mean error: " + str(squaredError) + "\n" +
-                            "R²: " + str(r2Score) + "\n")
+                            "Mean error: " + str(meanError) + "\n" +
+                            "Mean absolute error: " + str(absoluteError) + "\n" +
+                            "Mean absolute percentage error: " + str(mape) + "\n" +
+                            "R²: " + str(r2Score) + "\n" +
+                            "Within standard deviation: " + str(withinSTD) + "%" + "\n")
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
@@ -378,6 +390,14 @@ class Window(QtGui.QDialog):
 
         return decomp
 
+    def percentInSTD(self, y, y_actual):
+        data = Window.data
+        deviation = data.dropna().std()[1]
+        inside = 0
+        for y_value, y_actual_value in zip(y, y_actual):
+            if y_value - deviation < y_actual_value[0] or y_value + deviation > y_actual_value[0]:
+                inside += 1
+        return inside / len(y) * 100
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
