@@ -1,5 +1,7 @@
 import random
 import sys
+from threading import Thread
+
 import pandas as pd
 import numpy as np
 from PyQt5 import QtWidgets as QtGui
@@ -7,6 +9,19 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
+
+class LoadingDialog(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(LoadingDialog, self).__init__(parent)
+
+
+        self.textDesc = QtGui.QLabel()
+        self.textDesc.setText("Loading data, please wait")
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.textDesc)
+        self.setLayout(layout)
+
 
 class ExploreWindow(QtGui.QDialog):
     def __init__(self, parent=None, inputFigure=None):
@@ -60,11 +75,11 @@ class Window(QtGui.QDialog):
         self.timestampFieldBox.setEnabled(False)
 
         self.plotButton = QtGui.QPushButton("Plot data")
-        self.plotButton.clicked.connect(self.plot)
+        self.plotButton.clicked.connect(self.plotClicked)
         self.plotButton.setEnabled(False)
 
         self.loadButton = QtGui.QPushButton("Load data")
-        self.loadButton.clicked.connect(self.loadData)
+        self.loadButton.clicked.connect(self.loadDataClicked)
 
         self.plotTypeBox = QtGui.QComboBox()
         self.plotTypeBox.addItems(
@@ -127,11 +142,28 @@ class Window(QtGui.QDialog):
 
         return
 
-    def loadData(self):
+    def showPopupAndWait(self, targetMethod=None):
+        popup = LoadingDialog(parent=self)
+        thread = Thread(target=targetMethod)
+        thread2 = Thread(target=self.hidePopupWhenDone, args=(thread, popup))
+        thread2.start()
+        popup.exec_()
+        thread2.join()
+
+    def hidePopupWhenDone(self, thread, popup):
+        thread.start()
+        thread.join()
+        popup.done(1)
+
+    def loadDataClicked(self):
         if not Window.filename:
             print("Invalid file")
             return
 
+        self.showPopupAndWait(self.loadData)
+
+
+    def loadData(self):
         Window.data = pd.read_csv(Window.filename, parse_dates=[self.timestampFieldBox.currentText()],
                                   index_col=self.timestampFieldBox.currentText(),
                                   delimiter=self.selectDelimiterBox.currentText())
@@ -152,6 +184,9 @@ class Window(QtGui.QDialog):
         self.timestampFieldBox.clear()
         self.timestampFieldBox.addItems(self.headers)
         self.timestampFieldBox.setEnabled(True)
+
+    def plotClicked(self):
+        self.showPopupAndWait(targetMethod=self.plot)
 
     def plot(self):
         print("Plotting data")
