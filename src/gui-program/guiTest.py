@@ -5,7 +5,28 @@ import numpy as np
 from PyQt5 import QtWidgets as QtGui
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
+class ExploreWindow(QtGui.QDialog):
+    def __init__(self, parent=None, inputFigure=None):
+        super(ExploreWindow, self).__init__(parent)
+        self.figure = inputFigure
+
+        if self.figure is None:
+            return
+
+        self.canvas = FigureCanvas(self.figure)
+
+        # this is the Navigation widget
+        # it takes the Canvas widget and a parent
+        self.toolbar = NavigationToolbar(self.canvas, self)
+
+        # set the layout
+        layout = QtGui.QVBoxLayout()
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
 
 
 class Window(QtGui.QDialog):
@@ -60,6 +81,9 @@ class Window(QtGui.QDialog):
         self.loadPredictionButton.hide()
         self.loadPredictionButton.clicked.connect(self.doPrediction)
 
+        self.exploreButton = QtGui.QPushButton("Explore")
+        self.exploreButton.clicked.connect(self.showExplore)
+
         # set the layout
         layout = QtGui.QGridLayout()
         layout.setSpacing(4)
@@ -82,8 +106,13 @@ class Window(QtGui.QDialog):
         layout.addWidget(self.loadPredictionButton, 9, 1)
 
         layout.addWidget(self.plotButton, 10, 1)
-        layout.addWidget(self.canvas, 1, 2, 10, 1)
+        layout.addWidget(self.canvas, 1, 2, 9, 1)
+        layout.addWidget(self.exploreButton, 10, 2)
         self.setLayout(layout)
+
+    def showExplore(self):
+        popup = ExploreWindow(inputFigure=self.figure)
+        popup.show()
 
     def plotTypeChanged(self):
         if self.plotTypeBox.currentIndex() == 2:
