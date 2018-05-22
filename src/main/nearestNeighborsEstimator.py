@@ -28,7 +28,37 @@ def extractTimeAndTemperature(data):
     return np.array(keys), np.array(power)
 
 
+def findBestK():
+    data = loadDataFromCSV("../../data/Building-1/building1retail.csv")
+    keys, power = extractTimeAndTemperature(data)
+    keys = keys[:, np.newaxis]
 
+    testData = extractTimeAndTemperature(data[-96:])
+    x_test, y_test = testData
+    x_test = x_test[:, np.newaxis]
+
+    x = []
+    for i in range(24):
+        x.append(i)
+        x.append(i + .25)
+        x.append(i + .5)
+        x.append(i + .75)
+
+    x = np.array(x)
+    x = x[:, np.newaxis]
+
+    from sklearn.metrics import r2_score
+    scores = []
+    for i in range(1, 1500, 1):
+        regressor = KNeighborsRegressor(n_neighbors=i)
+        regressor.fit(keys, power)
+
+        pred = regressor.predict(x)
+        scores.append(r2_score(y_test, pred))
+
+    plt.figure()
+    plt.plot(scores)
+    plt.show()
 
 
 def run():
@@ -36,7 +66,7 @@ def run():
     keys, power = extractTimeAndTemperature(data)
     keys = keys[:, np.newaxis]
 
-    regressor = KNeighborsRegressor(n_neighbors=5)
+    regressor = KNeighborsRegressor(n_neighbors=1080)  # best ≈ 1080
     regressor.fit(keys, power)
 
     testData = extractTimeAndTemperature(data[2000:2500])
@@ -61,3 +91,4 @@ def run():
     plt.show()
 
 run()
+#findBestK()
