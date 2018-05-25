@@ -186,6 +186,7 @@ class Window(QtGui.QDialog):
         self.timestampFieldBox.setEnabled(True)
 
     def plotClicked(self):
+        #self.plot()
         self.showPopupAndWait(targetMethod=self.plot)
 
     def plot(self):
@@ -398,7 +399,7 @@ class Window(QtGui.QDialog):
         deviation = data.dropna().std()[1]
         inside = 0
         for y_value, y_actual_value in zip(y, y_actual):
-            if y_value - deviation < y_actual_value[0] or y_value + deviation > y_actual_value[0]:
+            if y_value - deviation < y_actual_value[0] < y_value + deviation:
                 inside += 1
         return inside / len(y) * 100
 
