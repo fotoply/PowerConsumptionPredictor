@@ -339,36 +339,37 @@ class Window(QtGui.QDialog):
         ax.plot(data.index.values, y, label="Prediction", linewidth=2)
         ax.set_ylabel(Window.groups[1].columns[0])
         self.figure.autofmt_xdate()
-        y_actual = data_actual.iloc[:]
         if data_actual is not None:
+            y_actual = data_actual.iloc[:]
             ax.scatter(data_actual.index.values, y_actual, label="Actual")
+            self.canvas.draw()
+            y_actual = y_actual.values
+            from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, average_precision_score, \
+                accuracy_score
+            squaredError = mean_squared_error(y_actual, y)
+            meanError = sqrt(squaredError)
+            absoluteError = mean_absolute_error(y_actual, y)
+            mape = np.mean(np.abs((y_actual - y) / y_actual)) * 100
+            r2Score = r2_score(y_actual, y)
+            withinSTD = self.percentInSTD(y, y_actual)
+            # precision = average_precision_score(y_actual, y) #These don't work for continous values
+            # accuracy = accuracy_score(y_actual, y)
+
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Information)
+            msg.setText("Relevant data for prediction")
+            msg.setWindowTitle("Prediction information")
+            msg.setDetailedText("Squared mean error: " + str(squaredError) + "\n" +
+                                "Mean error: " + str(meanError) + "\n" +
+                                "Mean absolute error: " + str(absoluteError) + "\n" +
+                                "Mean absolute percentage error: " + str(mape) + "\n" +
+                                "R²: " + str(r2Score) + "\n" +
+                                "Within standard deviation: " + str(withinSTD) + "%" + "\n")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec_()
+
         self.canvas.draw()
 
-        y_actual = y_actual.values
-
-        from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, average_precision_score, \
-            accuracy_score
-        squaredError = mean_squared_error(y_actual, y)
-        meanError = sqrt(squaredError)
-        absoluteError = mean_absolute_error(y_actual, y)
-        mape = np.mean(np.abs((y_actual - y) / y_actual)) * 100
-        r2Score = r2_score(y_actual, y)
-        withinSTD = self.percentInSTD(y, y_actual)
-        # precision = average_precision_score(y_actual, y) #These don't work for continous values
-        # accuracy = accuracy_score(y_actual, y)
-
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Information)
-        msg.setText("Relevant data for prediction")
-        msg.setWindowTitle("Prediction information")
-        msg.setDetailedText("Squared mean error: " + str(squaredError) + "\n" +
-                            "Mean error: " + str(meanError) + "\n" +
-                            "Mean absolute error: " + str(absoluteError) + "\n" +
-                            "Mean absolute percentage error: " + str(mape) + "\n" +
-                            "R²: " + str(r2Score) + "\n" +
-                            "Within standard deviation: " + str(withinSTD) + "%" + "\n")
-        msg.setStandardButtons(QMessageBox.Ok)
-        msg.exec_()
 
     def decomposeSeries(self, ts, decompType=None):
         decomp = None
