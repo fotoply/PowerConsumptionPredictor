@@ -49,7 +49,7 @@ def run():
     x = np.array(x)
     x = x[:, np.newaxis]
 
-    regressor = linear_model.Ridge(alpha=0.0001, fit_intercept=False)
+    regressor = linear_model.Ridge(alpha=0.0001, fit_intercept=True)
     regressor.fit(train_x, train_y)
     y_pred = regressor.predict(x)
 
