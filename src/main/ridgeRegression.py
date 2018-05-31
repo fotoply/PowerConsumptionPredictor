@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import linear_model
+from sklearn.metrics import r2_score
 
 
 def stripDate(s):
@@ -35,6 +36,7 @@ def run():
     time, tempe, power = extract(data[:5000])
     train_x = np.array(time)[:, np.newaxis]
     train_y = np.array(power)
+    time_t, tempe_t, test_y = extract(data[-96:])
     print(train_y)
 
     x = []
@@ -49,11 +51,14 @@ def run():
 
     regressor = linear_model.Ridge(alpha=0.0001, fit_intercept=False)
     regressor.fit(train_x, train_y)
+    y_pred = regressor.predict(x)
+
+    print('r2 score: ' + str(r2_score(test_y, y_pred)))
 
     plt.xlabel('time')
     plt.ylabel('power')
-    plt.scatter(train_x, train_y)
-    plt.plot(x, regressor.predict(x))
+    plt.scatter(train_x, train_y, c='r')
+    plt.plot(x, y_pred, c='black', lw=2)
     plt.axis('tight')
     plt.show()
 

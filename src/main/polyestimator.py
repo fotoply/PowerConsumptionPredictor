@@ -34,7 +34,11 @@ def run():
         model = make_pipeline(PolynomialFeatures(degree), Ridge())
         model.fit(trainingKey[:, np.newaxis], trainingAvg)
         y_plot = model.predict(testKey[:, np.newaxis])
-        plt.plot(testKey, y_plot, color=colors[count], linewidth=lw, label="degree %d" % degree)
+        plt.plot(testKey, y_plot,
+                 #color=colors[count],
+                 linewidth=lw, label="degree %d" % degree)
+        from sklearn.metrics import r2_score
+        print("R2 score %d degree: " % degree + str(r2_score(testAvg, y_plot)))
 
     plt.show()
 

@@ -30,11 +30,10 @@ def run():
     print("Mean squared error: %.2f"
           % mean_squared_error(y_test, y_prediction))
     # Explained variance score: 1 is perfect prediction
-    print('Variance score: %.2f' % r2_score(y_test, y_prediction))
+    print('Variance score: ' + str(r2_score(y_test, y_prediction)))
 
     plt.scatter(x_test, y_test, color='black')
     plt.plot(x_test, y_prediction, color='blue', linewidth=3)
-
 
     plt.show()
 

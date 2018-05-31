@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+from sklearn.ensemble import AdaBoostRegressor
 
 
 class LoadingDialog(QtGui.QDialog):
@@ -186,8 +187,8 @@ class Window(QtGui.QDialog):
         self.timestampFieldBox.setEnabled(True)
 
     def plotClicked(self):
-        #self.plot()
-        self.showPopupAndWait(targetMethod=self.plot)
+        self.plot()
+        #self.showPopupAndWait(targetMethod=self.plot)
 
     def plot(self):
         print("Plotting data")
@@ -285,8 +286,8 @@ class Window(QtGui.QDialog):
                 from sklearn.pipeline import make_pipeline
                 from sklearn.preprocessing import PolynomialFeatures
                 from sklearn.linear_model import Ridge
-                regressor = make_pipeline(PolynomialFeatures(3), DecisionTreeRegressor(
-                    max_depth=10))  # linear_model.LinearRegression(fit_intercept=False)  # AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
+                regressor = make_pipeline(PolynomialFeatures(3), DecisionTreeRegressor(max_depth=10))
+                # linear_model.LinearRegression(fit_intercept=False)  # AdaBoostRegressor(DecisionTreeRegressor(max_depth=10), n_estimators=20, random_state=rng)
                 regressor.fit(represe[0].dropna().values, represe[1].dropna().iloc[:, 0])
                 self.figure.clear()
                 ax = self.figure.add_subplot(111)
